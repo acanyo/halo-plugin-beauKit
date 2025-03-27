@@ -32,8 +32,8 @@ export default defineConfig({
     },
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
-      name: 'SwissKnife',
-      fileName: (format) => `@js/swiss-knife.${format}.js`,
+      name: 'beauKitLit',
+      fileName: (format) => `@js/beauKitLit.${format}.js`,
       formats: ['umd']
     },
     outDir: '../static',
@@ -43,14 +43,14 @@ export default defineConfig({
         inlineDynamicImports: true,
         manualChunks: undefined,
         // 配置 JS 文件输出路径
-        entryFileNames: '@js/[name]-[hash].js',
-        chunkFileNames: '@js/[name]-[hash].js',
+        entryFileNames: '@js/beauKitLit.js',
+        chunkFileNames: '@js/beauKitLit.[hash].js',
         assetFileNames: (assetInfo) => {
           if (!assetInfo?.name) return 'assets/[name].[hash][extname]'
           const info = assetInfo.name.split('.')
           const extType = info[info.length - 1]
           if (extType === 'css') {
-            return '@css/[name]-[hash].css'
+            return '@css/beauKitLit.css'
           }
           if (/\.(png|jpe?g|gif|svg|webp|ico)$/.test(assetInfo.name)) {
             return '@img/[name]-[hash].[ext]'
