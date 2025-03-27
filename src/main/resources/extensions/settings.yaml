@@ -1,0 +1,215 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-beauKit-settings
+spec:
+  forms:
+    - group: base
+      label: 美化设置
+      formSchema:
+        - $el: a
+          attrs:
+            href: "https://www.lik.cc/docs/halo-plugins"
+            class: "py-4 block"
+            target: "_blank"
+            style:
+              color: "#1890ff"
+              fontSize: "0.875em"
+              display: "flex"
+              align-items: "center"
+          children:
+            - $el: span
+              children: "查看 美化工具箱 帮助文档"
+            - $el: img
+              attrs:
+                src: "/plugins/beauKit/assets/static/img/link.svg"
+                width: "14px"
+                height: "14px"
+                style:
+                  margin-left: "4px"
+        - $el: span
+          children: "加入交流群"
+        - $el: img
+          attrs:
+            src: "https://www.lik.cc/upload/iShot_2025-03-03_16.03.00.png"
+            width: "100px"
+            height: "120px"
+            style:
+              margin-left: "80px"
+        - $formkit: checkbox
+          label: 自动切换深色模式
+          name: autoDetect
+          id: autoDetect
+          key: autoDetect
+          value: 'true'
+          help: "自动跟随系统或网站主题"
+        - $formkit: text
+          if: $get(autoDetect).value == true
+          label: 深色模式检测选择器
+          name: selector
+          validation: required
+          value: '[data-color-schema="dark"]'
+          help: "设置用于检测网站是否处于深色模式的DOM选择器,如何获取自己网站请前往:https://www.lik.cc/docs/halo-plugins 查看教程"
+        - $formkit: text
+          if: $get(autoDetect).value == true
+          label: 自定义深色模式适配
+          name: themeClass
+          validation: required
+          value: 'dark'
+          help: "设置组件在深色模式下应该使用的主题类名 不懂不要修改！"
+        - $formkit: checkbox
+          label: 启用公告组件
+          name: enableNotice
+          id: enableNotice
+          key: enableNotice
+          value: 'false'
+          help: "开启公告组件"
+        - $formkit: text
+          if: $get(enableNotice).value == true
+          label: 显示间隔时间（小时）
+          name: showInterval
+          validation: required
+          value: '0'
+          help: "0表示每次都显示，大于0表示间隔指定小时后再显示"
+        - $formkit: text
+          if: $get(enableNotice).value == true
+          label: 公告正文内容
+          name: content
+          validation: required
+          value: '欢迎访问我的博客！我是Handsome 感谢你的访问！'
+          help: "公告弹窗内容"
+        - $formkit: text
+          if: $get(enableNotice).value == true
+          label: 公告显示时长（毫秒）
+          name: showTime
+          validation: required
+          value: '5000'
+          help: "设置为 0 则不会自动关闭"
+        - $formkit: select
+          if: $get(enableNotice).value == true
+          name: position
+          label: 通知显示位置
+          placeholder: 选择通知显示位置
+          options:
+            - label: 居中
+              value: center
+            - label: 左上角
+              value: top-left
+            - label: 右上角
+              value: top-right
+            - label: 右下角
+              value: bottom-right
+            - label: 左下角
+              value: bottom-left
+        - $formkit: code
+          if: $get(enableNotice).value == true
+          label: 确认按钮
+          name: confirm
+          validation: required
+          value: '<a href="https://www.baidu.com" target="_blank">查看详情</a>'
+          language: html
+          help: "支持HTML标签和样式"
+        - $formkit: code
+          if: $get(enableNotice).value == true
+          label: 关闭按钮
+          name: close
+          validation: required
+          value: '稍后查看'
+          language: html
+          help: "支持HTML标签和样式"
+        - $formkit: checkbox
+          label: 是否启用字体设置组件
+          name: fontEnable
+          id: fontEnable
+          key: fontEnable
+          value: 'false'
+        - $formkit: text
+          if: $get(fontEnable).value == true
+          label: 字体名称
+          name: fontName
+          validation: required
+          value: 'LXGW WenKai'
+        - $formkit: attachment
+          if: $get(fontEnable).value == true
+          label: 字体资源地址
+          name: fontUrl
+          id: fontUrl
+          key: fontUrl
+          value: "https://cdn.jsdmirror.com/gh/acanyo/mmm.sd@master/assets/font/lxwk.woff2"
+          help: "使用woff2文件/分包CSS文件"
+        - $formkit: checkbox
+          label: 是否启用互动机器人组件
+          name: auroraEnable
+          id: auroraEnable
+          key: auroraEnable
+          value: 'false'
+        - $formkit: select
+          if: $get(auroraEnable).value == true
+          name: auroraPosition
+          label: 组件显示位置
+          placeholder: 选择组件位置
+          options:
+            - label: 左侧显示
+              value: left
+            - label: 右侧显示
+              value: right
+        - $formkit: select
+          if: $get(auroraEnable).value == true
+          name: locale
+          label: 组件语言设置
+          placeholder: 选择组件语言
+          options:
+            - label: 简体中文
+              value: zh-CN
+            - label: 繁体中文
+              value: zh-TW
+            - label: 英文
+              value: en
+
+    - group: DataPieChart
+      label: 数据饼图
+      formSchema:
+        - $formkit: list
+          name: footprintTypes
+          label: 足迹类型
+          addLabel: 添加类型
+          min: 1
+          value: ["旅游", "美食", "购物", "住宿", "交通", "其他"]
+          help: "自定义足迹类型"
+          itemType: string
+          children:
+            - $formkit: text
+              index: "$index"
+              validation: required
+
+    - group: thumbnail
+      label: 缩略图设置
+      formSchema:
+        - $formkit: list
+          name: footprintTypes
+          label: 足迹类型
+          addLabel: 添加类型
+          min: 1
+          value: ["旅游", "美食", "购物", "住宿", "交通", "其他"]
+          help: "自定义足迹类型"
+          itemType: string
+          children:
+            - $formkit: text
+              index: "$index"
+              validation: required
+
+    - group: sendWx
+      label: 微信公众号同步
+      formSchema:
+        - $formkit: list
+          name: footprintTypes
+          label: 足迹类型
+          addLabel: 添加类型
+          min: 1
+          value: ["旅游", "美食", "购物", "住宿", "交通", "其他"]
+          help: "自定义足迹类型"
+          itemType: string
+          children:
+            - $formkit: text
+              index: "$index"
+              validation: required
