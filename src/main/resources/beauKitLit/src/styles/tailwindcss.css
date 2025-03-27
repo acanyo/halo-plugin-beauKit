@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 添加样式来支持深色模式的切换 */
+:host {
+  display: contents;
+}
+
+.dark {
+  color-scheme: dark;
+}
