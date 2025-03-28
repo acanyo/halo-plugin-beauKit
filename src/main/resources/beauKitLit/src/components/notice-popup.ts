@@ -321,16 +321,44 @@ export class NoticePopup extends LitElement {
   /** 检测网站当前主题 */
   private detectTheme(): 'light' | 'dark' {
     if (!this.config?.darkMode?.autoDetect) return this.theme;
+    
     try {
-      return document.querySelector(this.config.darkMode.selector || 'html.dark') ? 'dark' : 'light';
-    } catch {
+      // 先检查全局变量
+      if (typeof (window as any).SWISS_KNIFE_DARK_MODE === 'boolean') {
+        console.log('Swiss Knife Notice: 从全局变量检测主题', (window as any).SWISS_KNIFE_DARK_MODE);
+        return (window as any).SWISS_KNIFE_DARK_MODE ? 'dark' : 'light';
+      }
+      
+      const selector = this.config.darkMode.selector || 'html.dark';
+      
+      // 处理属性选择器 [data-xxx="yyy"]
+      if (selector.startsWith('[') && selector.includes('=')) {
+        return document.querySelector(selector) ? 'dark' : 'light';
+      }
+      
+      // 处理类选择器 (如 html.dark 或 body.night-mode)
+      else if (selector.includes('.')) {
+        const [tagName, className] = selector.split('.');
+        const targetElement = tagName ? document.querySelector(tagName) : document.documentElement;
+        return targetElement && targetElement.classList.contains(className) ? 'dark' : 'light';
+      }
+      
+      // 默认检查document.documentElement是否包含指定的类
+      const themeClass = this.config.darkMode.themeClass || 'dark';
+      return document.documentElement.classList.contains(themeClass) ? 'dark' : 'light';
+    } catch (e) {
+      console.warn('Swiss Knife Notice: 主题检测失败，回退到系统主题', e);
       return window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
     }
   }
   
   /** 更新组件主题 */
   private updateTheme() {
-    this.theme = this.detectTheme();
+    const newTheme = this.detectTheme();
+    if (this.theme !== newTheme) {
+      console.log('Swiss Knife Notice: 主题更新', this.theme, '->', newTheme);
+      this.theme = newTheme;
+    }
   }
 
   /** 检查是否应该显示通知 */
@@ -374,11 +402,12 @@ export class NoticePopup extends LitElement {
     // 记录显示时间
     this.recordShowTime()
 
+    // 设置主题
+    this.theme = this.detectTheme()
+    console.log('Swiss Knife Notice: 初始主题设置为', this.theme)
+    
     // 设置主题监听
-    if (this.config.darkMode?.autoDetect) {
-      this.setupThemeObserver()
-      this.theme = this.detectTheme()
-    }
+    this.setupThemeObserver()
 
     // 延迟显示
     if (this.config.showDelay > 0) {
@@ -406,45 +435,78 @@ export class NoticePopup extends LitElement {
   
   /** 设置主题监听器 */
   private setupThemeObserver() {
-    // 如果已经存在观察器，先断开连接
-    if (this.themeObserver) {
-      this.themeObserver.disconnect();
-    }
-    
-    // 创建DOM变化观察器
-    this.themeObserver = new MutationObserver(() => {
-      // 主题可能已经改变，更新组件主题
-      this.updateTheme();
-    });
-    
-    // 确定要观察的元素和属性
     try {
-      // 从选择器中提取要观察的元素
-      const selector = this.config?.darkMode?.selector || 'html.dark';
-      const selectorParts = selector.split('.');
+      // 监听beaukit-theme-change事件 - 这是主要的主题变更通知机制
+      document.addEventListener('beaukit-theme-change', (event: any) => {
+        console.log('Swiss Knife Notice: 收到主题变更事件', event.detail);
+        this.theme = event.detail?.isDark ? 'dark' : 'light';
+      });
       
-      // 判断选择器类型
-      if (selector.includes('[data-')) {
-        // 观察属性变化
+      // 如果已经存在观察器，先断开连接
+      if (this.themeObserver) {
+        this.themeObserver.disconnect();
+      }
+      
+      // 创建DOM变化观察器作为备份检测机制
+      this.themeObserver = new MutationObserver(() => {
+        // 主题可能已经改变，更新组件主题
+        this.updateTheme();
+      });
+      
+      // 确定要观察的元素和属性
+      const selector = this.config?.darkMode?.selector || 'html.dark';
+      
+      // 对于属性选择器
+      if (selector.startsWith('[')) {
         const attrMatch = selector.match(/\[([^\]]+)\]/);
         if (attrMatch && attrMatch[1]) {
-          const targetElement = document.documentElement;
           const attrName = attrMatch[1].split('=')[0];
           
-          this.themeObserver.observe(targetElement, {
+          this.themeObserver.observe(document.documentElement, {
             attributes: true,
-            attributeFilter: [attrName]
+            attributeFilter: [attrName],
+            subtree: true
           });
         }
-      } else if (selectorParts.length > 1) {
-        // 观察类名变化
-        const targetElement = document.querySelector(selectorParts[0]) || document.documentElement;
+      } 
+      // 对于类选择器
+      else if (selector.includes('.')) {
+        const [tagName, _] = selector.split('.');
+        const targetElement = tagName ? document.querySelector(tagName) : document.documentElement;
         
-        this.themeObserver.observe(targetElement, {
+        if (targetElement) {
+          this.themeObserver.observe(targetElement, {
+            attributes: true,
+            attributeFilter: ['class']
+          });
+        } else {
+          // 如果找不到指定元素，观察document.documentElement
+          this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+          });
+        }
+      } 
+      // 默认情况
+      else {
+        this.themeObserver.observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['class']
         });
       }
+      
+      // 监听系统主题变化
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleMediaChange = () => this.updateTheme();
+      
+      if ('addEventListener' in mediaQuery) {
+        mediaQuery.addEventListener('change', handleMediaChange);
+      } else {
+        // @ts-ignore - 兼容旧版浏览器
+        mediaQuery.addListener(handleMediaChange);
+      }
+      
+      console.log('Swiss Knife Notice: 主题监听器设置完成');
     } catch (e) {
       console.warn('Swiss Knife Notice: 设置主题监听器失败', e);
     }
@@ -582,7 +644,18 @@ window.addEventListener('DOMContentLoaded', () => {
   // 严格检查 enable 为 true
   if (config && config.enable === true) {
     console.log('Swiss Knife Notice: 正在创建组件')
-    const popup = document.createElement('notice-popup')
+    
+    // 创建通知组件实例
+    const popup = document.createElement('notice-popup') as NoticePopup
+    
+    // 设置初始主题
+    if (typeof (window as any).SWISS_KNIFE_DARK_MODE === 'boolean') {
+      const isDark = (window as any).SWISS_KNIFE_DARK_MODE
+      popup.theme = isDark ? 'dark' : 'light'
+      console.log('Swiss Knife Notice: 通过全局变量设置初始主题:', popup.theme)
+    }
+    
+    // 添加到文档中
     document.body.appendChild(popup)
   } else {
     console.log('Swiss Knife Notice: 组件未启用', config?.enable)

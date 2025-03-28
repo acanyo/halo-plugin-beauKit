@@ -28,7 +28,7 @@ export function loadAuroraDia(): void {
     // 创建script元素
     const script = document.createElement('script');
     script.type = 'module';
-    script.src = '/examples/index-_C78b3jH.js';
+    // script.src = '/examples/index-_C78b3jH.js';
     
     // 添加到文档
     document.head.appendChild(script);

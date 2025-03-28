@@ -22,6 +22,8 @@ public class BaseConfig {
     private DarkModeConfig darkMode;
     @Data
     @Schema(description = "通知组件配置")
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class NoticeConfig {
 
         @Schema(description = "是否启用公告组件", defaultValue = "false")
@@ -56,6 +58,8 @@ public class BaseConfig {
 
     @Data
     @Schema(description = "按钮配置")
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ButtonsConfig {
 
         @Schema(description = "确认按钮HTML内容")
@@ -67,6 +71,8 @@ public class BaseConfig {
 
     @Data
     @Schema(description = "深色模式配置")
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class DarkModeConfig {
 
         @Schema(description = "是否自动跟随系统或网站主题", defaultValue = "true")
@@ -81,6 +87,8 @@ public class BaseConfig {
 
     @Data
     @Schema(description = "字体设置组件配置")
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class TypographyConfig {
 
         @Schema(description = "是否启用字体设置组件", defaultValue = "false")
@@ -95,6 +103,8 @@ public class BaseConfig {
 
     @Data
     @Schema(description = "Aurora-Dia 小球组件配置")
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class AuroraConfig {
 
         @Schema(description = "是否启用Aurora-Dia组件", defaultValue = "true")
