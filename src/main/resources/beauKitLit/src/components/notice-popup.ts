@@ -643,20 +643,46 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 严格检查 enable 为 true
   if (config && config.enable === true) {
-    console.log('Swiss Knife Notice: 正在创建组件')
+    console.log('Swiss Knife Notice: 准备创建组件，等待页面完全渲染')
     
-    // 创建通知组件实例
-    const popup = document.createElement('notice-popup') as NoticePopup
-    
-    // 设置初始主题
-    if (typeof (window as any).SWISS_KNIFE_DARK_MODE === 'boolean') {
+    // 延迟创建弹窗，确保主题已完全应用
+    const createPopup = () => {
+      // 确保全局变量已设置
+      if (typeof (window as any).SWISS_KNIFE_DARK_MODE === 'undefined') {
+        console.log('Swiss Knife Notice: 等待主题变量设置')
+        // 再等待一小段时间，确保主题变量已设置
+        setTimeout(createPopup, 200)
+        return
+      }
+      
+      console.log('Swiss Knife Notice: 页面已渲染完成，创建弹窗组件')
+      
+      // 创建通知组件实例
+      const popup = document.createElement('notice-popup') as NoticePopup
+      
+      // 设置初始主题
       const isDark = (window as any).SWISS_KNIFE_DARK_MODE
       popup.theme = isDark ? 'dark' : 'light'
       console.log('Swiss Knife Notice: 通过全局变量设置初始主题:', popup.theme)
+      
+      // 添加到文档中
+      document.body.appendChild(popup)
     }
     
-    // 添加到文档中
-    document.body.appendChild(popup)
+    // 使用多层保障确保在页面完全渲染后创建弹窗
+    if (document.readyState === 'complete') {
+      // 如果页面已完全加载
+      setTimeout(() => {
+        requestAnimationFrame(createPopup)
+      }, config.showDelay || 1000) // 使用配置的延迟时间，或默认1000ms
+    } else {
+      // 等待页面完全加载
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          requestAnimationFrame(createPopup)
+        }, config.showDelay || 1000)
+      })
+    }
   } else {
     console.log('Swiss Knife Notice: 组件未启用', config?.enable)
   }
